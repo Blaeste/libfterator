@@ -1,0 +1,36 @@
+# Dossiers temporaires et de test
+build/
+out/
+libft/
+
+# Fichiers de logs
+*.log
+
+# Fichiers temporaires
+*.tmp
+*~
+
+# Fichiers de compilation
+*.o
+*.a
+*.so
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Autres fichiers temporaires de test
+test_libft/
+temp/
