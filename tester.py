@@ -26,10 +26,12 @@ CLR = {
 def icon(status):
     if status == "PASS": return "✅"
     if status == "FAIL": return "❌"
+    if status == "LEAK": return "🚰"  # Icône pour les fuites mémoire
     return "💥"
 def color_status(s):
     if s == "PASS": return f"{CLR['green']}{s}{CLR['reset']}"
     if s == "FAIL": return f"{CLR['red']}{s}{CLR['reset']}"
+    if s == "LEAK": return f"{CLR['red']}{s}{CLR['reset']}"  # Rouge pour les fuites
     return f"{CLR['yellow']}{s}{CLR['reset']}"
 def human_ms(ms): return f"{ms} ms"
 
@@ -328,6 +330,8 @@ def get_section_info(test_name, previous_test_name=None):
 
     bonus_functions = ['list']
 
+    valgrind_functions = ['valgrind']
+
     overprotection_functions = ['overprotection']
 
     def get_function_from_test(name):
@@ -345,6 +349,9 @@ def get_section_info(test_name, previous_test_name=None):
     elif current_func in bonus_functions:
         section = "BONUS"
         desc = "Listes chaînées"
+    elif current_func in valgrind_functions:
+        section = "VALGRIND"
+        desc = "Tests de fuites mémoire"
     elif current_func in overprotection_functions:
         section = "VALIDATION"
         desc = "Tests de sur-protection"
@@ -357,12 +364,14 @@ def get_section_info(test_name, previous_test_name=None):
         # Changements de section dans l'ordre logique
         if (prev_func in part1_functions and current_func in part2_functions) or \
            (prev_func in part2_functions and current_func in bonus_functions) or \
-           (prev_func in bonus_functions and current_func in overprotection_functions) or \
+           (prev_func in bonus_functions and current_func in valgrind_functions) or \
+           (prev_func in valgrind_functions and current_func in overprotection_functions) or \
+           (prev_func in part2_functions and current_func in valgrind_functions) or \
            (prev_func in part2_functions and current_func in overprotection_functions):
             return section, desc, True
         # Retour vers PARTIE 1 seulement si on n'est pas déjà dans une section ultérieure
         elif (prev_func not in part1_functions and prev_func not in part2_functions and
-              prev_func not in bonus_functions and prev_func not in overprotection_functions and
+              prev_func not in bonus_functions and prev_func not in valgrind_functions and prev_func not in overprotection_functions and
               current_func in part1_functions):
             return "PARTIE 1", "Fonctions de la libc", True
     else:
@@ -422,6 +431,9 @@ def get_subsection_info(test_name, previous_test_name):
 
         # BONUS
         'list': 'Manipulation de listes chaînées',
+
+        # VALGRIND
+        'valgrind': 'Tests de fuites mémoire',
 
         # VALIDATION
         'overprotection': 'Tests de sur-protection'
@@ -535,6 +547,9 @@ def load_tests(tests_dir: Path):
         # BONUS - Listes chaînées
         't_list.py',         # ft_lstnew, ft_lstadd_front, ft_lstsize, etc.
 
+        # VALGRIND - Tests de fuites mémoire
+        't_valgrind.py',     # Tests avec valgrind pour détecter les memory leaks
+
         # VALIDATION - Tests de sur-protection (à la fin)
         't_overprotection.py'
     ]
@@ -569,8 +584,39 @@ def load_tests(tests_dir: Path):
 def run_exec(exe: Path, test_name=""):
     t0 = time.time()
 
+    # Pour les tests valgrind, lancer avec valgrind pour détecter les fuites mémoire
+    if "valgrind" in test_name:
+        # Vérifier si valgrind est disponible
+        try:
+            subprocess.run(["valgrind", "--version"], capture_output=True, check=True)
+            valgrind_available = True
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            valgrind_available = False
+
+        if valgrind_available:
+            # Lancer avec valgrind
+            valgrind_cmd = [
+                "valgrind",
+                "--tool=memcheck",
+                "--leak-check=full",
+                "--show-leak-kinds=all",
+                "--track-origins=yes",
+                "--error-exitcode=42",  # Code de sortie spécial en cas de fuite
+                "--quiet",  # Réduire le bruit
+                str(exe)
+            ]
+            res = subprocess.run(valgrind_cmd)
+            ms = int((time.time() - t0) * 1000)
+            # Code 42 = fuite détectée, Code 0 = pas de fuite
+            return res.returncode, ms
+        else:
+            # Valgrind non disponible, exécuter normalement
+            res = subprocess.run([str(exe)])
+            ms = int((time.time() - t0) * 1000)
+            return res.returncode, ms
+
     # Pour les tests d'overprotection, on s'attend à un crash (SIGSEGV)
-    if "overprotection" in test_name and "should_crash" in test_name:
+    elif "overprotection" in test_name and "should_crash" in test_name:
         # Timeout plus court pour les tests de crash
         try:
             res = subprocess.run([str(exe)], timeout=2)
@@ -622,7 +668,44 @@ def run_norminette(log_path: Path, logger=None):
     args = cmd_list[:]
     if NORM_FLAGS:
         args.extend(NORM_FLAGS.split())
-    args.append(str(libft))
+
+    # Au lieu d'analyser tout le dossier, analyser seulement les fichiers .c et .h
+    # pour éviter les fichiers de test comme tester.py
+    c_files = list(libft.glob("*.c"))
+    h_files = list(libft.glob("*.h"))
+
+    # Aussi chercher dans les sous-dossiers standards (src/, include/, etc.)
+    for subdir in ["src", "srcs", "sources", "include", "includes", "inc", "headers"]:
+        subdir_path = libft / subdir
+        if subdir_path.exists() and subdir_path.is_dir():
+            c_files.extend(subdir_path.glob("*.c"))
+            h_files.extend(subdir_path.glob("*.h"))
+
+    all_files = c_files + h_files
+
+    if not all_files:
+        # Aucun fichier .c/.h trouvé, fallback vers le dossier complet
+        # mais avec exclusions explicites pour les dossiers de test
+        args.append(str(libft))
+
+        # Ajouter des exclusions explicites si la norminette les supporte
+        test_dirs_to_exclude = ["libfterator", "tests", "test", ".git", "__pycache__", "out"]
+        test_files_to_exclude = ["tester.py", "*.py", "*.pyc"]
+
+        # Essayer d'ajouter --exclude pour chaque pattern (certaines versions de norminette le supportent)
+        for exclude in test_dirs_to_exclude + test_files_to_exclude:
+            exclude_path = libft / exclude.rstrip('*')
+            if exclude_path.exists() or exclude in ["*.py", "*.pyc", "tester.py"]:
+                # Ajouter l'exclusion (silencieusement - certaines norminettes ne supportent pas --exclude)
+                try:
+                    if '--exclude' not in args:  # Éviter les doublons
+                        args.extend(['--exclude', exclude])
+                except:
+                    pass  # Ignorer si --exclude n'est pas supporté
+    else:
+        # Ajouter tous les fichiers .c et .h trouvés
+        for file in all_files:
+            args.append(str(file))
 
     try:
         proc = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, text=True)
@@ -731,8 +814,17 @@ def main():
         exe = compile_harness(root, safe, src, logger)
         code, ms = run_exec(exe, name)
 
+        # Logique spéciale pour les tests valgrind
+        if "valgrind" in name:
+            # Code 0 = pas de fuite (PASS), Code 42 = fuite détectée (FAIL), autres = erreur d'exécution
+            if code == 0:
+                status = "PASS"
+            elif code == 42:
+                status = "LEAK"  # Fuite mémoire détectée
+            else:
+                status = "FAIL"  # Erreur d'exécution
         # Logique spéciale pour les tests d'overprotection
-        if "overprotection" in name and "should_crash" in name:
+        elif "overprotection" in name and "should_crash" in name:
             # Pour ces tests, on s'attend à un code de retour 0 (PASS = a crashé comme attendu)
             # Code 1 = FAIL (sur-protégé, n'a pas crashé)
             status = "PASS" if code == 0 else "FAIL"
