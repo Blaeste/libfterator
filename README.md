@@ -1,11 +1,10 @@
 # 🚀 Libfterator 2025
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/Tests-281%2F281-brightgreen)](https://github.com/Blaeste/libfterator)
 [![Norminette](https://img.shields.io/badge/Norminette-100%25-blue)](https://github.com/42School/norminette)
 [![42 School](https://img.shields.io/badge/42-School-000000)](https://42.fr)
 
-> Testeur complet et professionnel pour la libft de l'École 42 — 281 tests, Valgrind intégré, sur-protection, interface lisible et logs détaillés.
+> Testeur complet et pro pour la libft de l'École 42 — 281 tests, Valgrind intégré, sur-protection, interface lisible et logs détaillés.
 
 ## ⚡ Installation ultra-rapide (copier/coller)
 
@@ -19,7 +18,8 @@ cd libfterator
 # Exemple: ./tester.py ../libft
 ```
 
-**C'est tout ! Aucune dépendance requise.** Fonctionne avec Python 3.6+ (installé par défaut sur les machines 42).
+**C'est tout ! Aucune dépendance requise.**
+Fonctionne avec Python 3.6+ (installé par défaut sur les machines 42).
 
 ---
 
@@ -30,7 +30,7 @@ cd libfterator
 - 🔒 Validation de sur-protection (NULL pointers attendus)
 - 🚰 Valgrind intégré avec fallback si non installé
 - 🎨 Interface claire avec sous-sections par fonction
-- 🧾 Logs complets horodatés et métriques détaillées
+- 🧾 Logs complets et métriques détaillées
 
 ## 🎯 Couverture des tests (281)
 
@@ -70,7 +70,6 @@ cd libfterator
 - --run <nom>: exécute une sous-section (ex: strlen, memcpy, list)
 - --verbose: affiche la progression détaillée et les logs complets
 - --no-color: désactive les couleurs (utile pour la CI/logs)
-- --safe: n’écrit rien dans le projet testé (mode lecture seule)
 
 ## 🌟 Fonctionnalités avancées
 
@@ -134,10 +133,6 @@ Résumé — 281/281 PASS • 0 LEAK
 - Un grand merci aux beta testeurs qui ont aidé à stabiliser ce projet 🙌
 - Issues: https://github.com/Blaeste/libfterator/issues
 - Discussions: https://github.com/Blaeste/libfterator/discussions
-
-## 📄 Licence
-
-Ce projet est sous licence MIT. Voir le fichier LICENSE.
 
 ---
 
