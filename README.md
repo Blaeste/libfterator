@@ -1,14 +1,3 @@
-# 🚀 Libfterator 2025# 🚀 Libfterator 2025
-
-
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-[![Tests](https://img.shields.io/badge/Tests-281%2F281-brightgreen)](https://github.com/Blaeste/libfterator)
-
-[![Norminette](https://img.shields.io/badge/Norminette-100%25-blue)](https://github.com/42School/norminette)[![Tests](https://img.shields.io/badge/Tests-251%2F251-brightgreen)](https://github.com/Blaeste/libfterator) [![Norminette](https://img.shields.io/badge/Norminette-100%25-blue)](https://github.com/42School/norminette) [![42 School](https://img.shields.io/badge/42-School-000000)](https://42.fr)
-
-[![42 School](https://img.shields.io/badge/42-School-000000)](https://42.fr)
 # 🚀 Libfterator 2025
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -16,18 +5,30 @@
 [![Norminette](https://img.shields.io/badge/Norminette-100%25-blue)](https://github.com/42School/norminette)
 [![42 School](https://img.shields.io/badge/42-School-000000)](https://42.fr)
 
-./tester.py /chemin/vers/libft --run list**C'est tout ! Aucune dépendance requise** - fonctionne avec Python 3.6+ (déjà installé sur les machines 42).### 🛡️ Validation rigoureuse
+> Testeur complet et professionnel pour la libft de l'École 42 — 281 tests, Valgrind intégré, sur-protection, interface lisible et logs détaillés.
 
 ## ⚡ Installation ultra-rapide (copier/coller)
 
 ```bash
 git clone https://github.com/Blaeste/libfterator.git
 cd libfterator
+```
 ./tester.py /chemin/vers/votre/libft
-
 **C'est tout ! Aucune dépendance requise.** Fonctionne avec Python 3.6+ (installé par défaut sur les machines 42).
 
 ---
+
+## 🧭 Sommaire
+
+- [✨ Points forts](#-points-forts)
+- [🎯 Couverture des tests (281)](#-couverture-des-tests-281)
+- [💡 Utilisation rapide](#-utilisation-rapide)
+- [🧰 Options](#-options)
+- [🌟 Fonctionnalités avancées](#-fonctionnalités-avancées)
+- [🖥️ Pré-requis](#️-pré-requis)
+- [🧪 Exemple de sortie (extrait)](#-exemple-de-sortie-extrait)
+- [🤝 Beta testeurs et support](#-beta-testeurs-et-support)
+- [📄 Licence](#-licence)
 
 ## ✨ Points forts
 
@@ -70,6 +71,14 @@ cd libfterator
 ./tester.py /chemin/vers/libft --safe
 ```
 
+## 🧰 Options
+
+- --list: affiche tous les tests disponibles et leur nom exécutable
+- --run <nom>: exécute une sous-section (ex: strlen, memcpy, list)
+- --verbose: affiche la progression détaillée et les logs complets
+- --no-color: désactive les couleurs (utile pour la CI/logs)
+- --safe: n’écrit rien dans le projet testé (mode lecture seule)
+
 ## 🌟 Fonctionnalités avancées
 
 ### 🔍 Détection automatique des headers
@@ -87,13 +96,23 @@ cd libfterator
 - Section séparée des tests normaux pour une lecture claire
 
 ### 🎨 Interface lisible
-- Affichage hiérarchique avec sous-sections par fonction (�)
+- Affichage hiérarchique avec sous-sections par fonction (📂)
 - Codes couleur: PASS ✅, FAIL ❌, LEAK 🚰
 - Compteurs de progression et résumés en fin d’exécution
 
 ### 🧾 Système de logs
 - Tous les résultats sont sauvegardés dans `out/` avec horodatage
 - Logs norminette, compilation, exécution et métriques
+
+### 🧩 Compatibilité
+- Linux (recommandé) et WSL: support complet; Valgrind disponible via le gestionnaire de paquets
+- macOS: fonctionnement OK; Valgrind n’est pas installé par défaut (fallback automatique)
+- Windows natif: utilisez WSL pour une expérience optimale
+
+### ❓ FAQ rapide
+- Valgrind n’est pas installé ? Les tests s’exécutent quand même, mais sans détection de fuites (fallback). Installez-le via votre gestionnaire de paquets pour activer la section fuites mémoire.
+- Où sont les logs ? Dans le dossier `out/`, avec un horodatage par session.
+- Faut-il déplacer `libft.h` ? Non. Le testeur détecte automatiquement les répertoires d’en-têtes et ajoute les `-I`.
 
 ## 🖥️ Pré-requis
 
@@ -136,4 +155,4 @@ Ce projet est sous licence MIT. Voir le fichier LICENSE.
 [🏠 Accueil](https://github.com/Blaeste/libfterator) • [🐛 Issues](https://github.com/Blaeste/libfterator/issues)
 
 </div>
-#### 🛡️ **Tests de sur-protection**
+
