@@ -132,7 +132,6 @@ Résumé — 281/281 PASS • 0 LEAK
 
 - Un grand merci aux beta testeurs qui ont aidé à stabiliser ce projet 🙌
 - Issues: https://github.com/Blaeste/libfterator/issues
-- Discussions: https://github.com/Blaeste/libfterator/discussions
 
 ---
 
