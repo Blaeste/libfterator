@@ -2,11 +2,7 @@
 
 
 
-[![Tests](https://img.shields.io/badge/Tests-251%2F251-brightgreen)](https://github.com/Blaeste/libfterator)
-
-[![Norminette](https://img.shields.io/badge/Norminette-100%25-blue)](https://github.com/42School/norminette)
-
-[![42 School](https://img.shields.io/badge/42-School-000000)](https://42.fr)
+[![Tests](https://img.shields.io/badge/Tests-251%2F251-brightgreen)](https://github.com/Blaeste/libfterator)[![Norminette](https://img.shields.io/badge/Norminette-100%25-blue)](https://github.com/42School/norminette)[![42 School](https://img.shields.io/badge/42-School-000000)](https://42.fr)
 
 
 
