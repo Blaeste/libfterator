@@ -207,12 +207,19 @@ int main() {
 }'''),
 
     ("putfd/stdout_test", '''
+#include <unistd.h>
+#include <fcntl.h>
 int main() {
-    // Test avec stdout (ne peut pas vérifier la sortie facilement, mais ne doit pas planter)
-    ft_putchar_fd('X', 1);
-    ft_putstr_fd("test", 1);
-    ft_putendl_fd("line", 1);
-    ft_putnbr_fd(42, 1);
+    // Test d'écriture vers un fichier (au lieu de stdout pour éviter la pollution d'affichage)
+    int fd = open("/tmp/test_stdout", O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd < 0) return 1;
+
+    ft_putchar_fd('X', fd);
+    ft_putstr_fd("test", fd);
+    ft_putendl_fd("line", fd);
+    ft_putnbr_fd(42, fd);
+
+    close(fd);
 
     return 0;
 }'''),

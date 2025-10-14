@@ -293,9 +293,19 @@ def check_makefile_rules():
 
 def build_libft():
     print(f"{CLR['cyan']}→ Build libft…{CLR['reset']}", end="", flush=True)
+    # Compiler d'abord la partie obligatoire
     subprocess.run(["make", "-C", str(libft), "re"],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
     ensure_path(libft / "libft.a", "libft.a")
+
+    # Essayer de compiler les bonus aussi (si ils existent)
+    try:
+        subprocess.run(["make", "-C", str(libft), "bonus"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    except subprocess.CalledProcessError:
+        # Les bonus ne sont peut-être pas disponibles, ce n'est pas grave
+        pass
+
     print(f" {CLR['green']}OK{CLR['reset']}")
 
 # ===============================================================
@@ -344,13 +354,16 @@ def get_section_info(test_name, previous_test_name=None):
     # Vérifier si c'est un changement de section
     if previous_test_name:
         prev_func = get_function_from_test(previous_test_name)
-        if prev_func in part1_functions and current_func in part2_functions:
+        # Changements de section dans l'ordre logique
+        if (prev_func in part1_functions and current_func in part2_functions) or \
+           (prev_func in part2_functions and current_func in bonus_functions) or \
+           (prev_func in bonus_functions and current_func in overprotection_functions) or \
+           (prev_func in part2_functions and current_func in overprotection_functions):
             return section, desc, True
-        elif prev_func in part2_functions and current_func in bonus_functions:
-            return section, desc, True
-        elif prev_func in bonus_functions and current_func in overprotection_functions:
-            return section, desc, True
-        elif prev_func not in part1_functions and current_func in part1_functions:
+        # Retour vers PARTIE 1 seulement si on n'est pas déjà dans une section ultérieure
+        elif (prev_func not in part1_functions and prev_func not in part2_functions and
+              prev_func not in bonus_functions and prev_func not in overprotection_functions and
+              current_func in part1_functions):
             return "PARTIE 1", "Fonctions de la libc", True
     else:
         # Premier test
@@ -365,6 +378,68 @@ def print_section_header(section, description):
     print(f"{CLR['cyan']}🔹 {section} — {description}{CLR['reset']}")
     print(f"{CLR['cyan']}{'='*82}{CLR['reset']}")
     print()
+
+def print_subsection_header(subsection, description):
+    """Affiche un en-tête de sous-section."""
+    print()
+    print(f"{CLR['dim']}{'─'*60}{CLR['reset']}")
+    print(f"{CLR['cyan']}📂 {subsection} — {description}{CLR['reset']}")
+    print(f"{CLR['dim']}{'─'*60}{CLR['reset']}")
+    print()
+
+def get_subsection_info(test_name, previous_test_name):
+    """Détermine si on doit afficher une nouvelle sous-section."""
+    subsection_descriptions = {
+        # PARTIE 1
+        'charclass': 'Tests de classification de caractères',
+        'caseconv': 'Conversion de casse',
+        'strlen': 'Longueur de chaîne',
+        'memset': 'Remplissage mémoire',
+        'bzero': 'Mise à zéro mémoire',
+        'memcpy': 'Copie mémoire',
+        'memmove': 'Copie mémoire avec chevauchement',
+        'strlcpy': 'Copie sécurisée de chaîne',
+        'strlcat': 'Concaténation sécurisée',
+        'strchr': 'Recherche de caractère',
+        'strrchr': 'Recherche inverse de caractère',
+        'strncmp': 'Comparaison de chaînes',
+        'memchr': 'Recherche en mémoire',
+        'memcmp': 'Comparaison mémoire',
+        'strnstr': 'Recherche de sous-chaîne',
+        'atoi': 'Conversion ASCII vers entier',
+        'calloc': 'Allocation mémoire initialisée',
+        'strdup': 'Duplication de chaîne',
+
+        # PARTIE 2
+        'substr': 'Extraction de sous-chaîne',
+        'strjoin': 'Jointure de chaînes',
+        'strtrim': 'Suppression d\'espaces',
+        'split': 'Division de chaîne',
+        'itoa': 'Conversion entier vers ASCII',
+        'strmapi': 'Application de fonction avec index',
+        'striteri': 'Itération avec modification',
+        'putfd': 'Écriture sur descripteur de fichier',
+
+        # BONUS
+        'list': 'Manipulation de listes chaînées',
+
+        # VALIDATION
+        'overprotection': 'Tests de sur-protection'
+    }
+
+    current_subsection = test_name.split('/')[0]
+
+    if previous_test_name:
+        previous_subsection = previous_test_name.split('/')[0]
+        if current_subsection != previous_subsection:
+            description = subsection_descriptions.get(current_subsection, current_subsection)
+            return current_subsection, description, True
+    else:
+        # Premier test
+        description = subsection_descriptions.get(current_subsection, current_subsection)
+        return current_subsection, description, True
+
+    return current_subsection, None, False
 
 # ===============================================================
 # 🧱 Compilation et exécution
@@ -425,13 +500,67 @@ def compile_harness(root: Path, name: str, source: str, logger=None) -> Path:
 # 🧩 Chargement des fichiers de tests
 # ===============================================================
 def load_tests(tests_dir: Path):
+    # Ordre logique selon le sujet de la libft
+    test_order = [
+        # PARTIE 1 - Fonctions de la libc
+        't_charclass.py',    # isalpha, isdigit, isalnum, isascii, isprint
+        't_caseconv.py',     # toupper, tolower
+        't_strlen.py',       # strlen
+        't_memset.py',       # memset
+        't_bzero.py',        # bzero
+        't_memcpy.py',       # memcpy
+        't_memmove.py',      # memmove
+        't_strlcpy.py',      # strlcpy
+        't_strlcat.py',      # strlcat
+        't_strchr.py',       # strchr
+        't_strrchr.py',      # strrchr
+        't_strncmp.py',      # strncmp
+        't_memchr.py',       # memchr
+        't_memcmp.py',       # memcmp
+        't_strnstr.py',      # strnstr
+        't_atoi.py',         # atoi
+        't_calloc.py',       # calloc
+        't_strdup.py',       # strdup
+
+        # PARTIE 2 - Fonctions supplémentaires
+        't_substr.py',       # ft_substr
+        't_strjoin.py',      # ft_strjoin
+        't_strtrim.py',      # ft_strtrim
+        't_split.py',        # ft_split
+        't_itoa.py',         # ft_itoa
+        't_strmapi.py',      # ft_strmapi
+        't_striteri.py',     # ft_striteri
+        't_putfd.py',        # ft_putchar_fd, ft_putstr_fd, ft_putendl_fd, ft_putnbr_fd
+
+        # BONUS - Listes chaînées
+        't_list.py',         # ft_lstnew, ft_lstadd_front, ft_lstsize, etc.
+
+        # VALIDATION - Tests de sur-protection (à la fin)
+        't_overprotection.py'
+    ]
+
     all_tests = []
+
+    # Charger les tests dans l'ordre défini
+    for filename in test_order:
+        file_path = tests_dir / filename
+        if file_path.exists():
+            spec = importlib.util.spec_from_file_location(file_path.stem, file_path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "TESTS"):
+                all_tests.extend(mod.TESTS)
+
+    # Charger les fichiers manquants (au cas où)
+    loaded_files = set(test_order)
     for file in sorted(tests_dir.glob("t_*.py")):
-        spec = importlib.util.spec_from_file_location(file.stem, file)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        if hasattr(mod, "TESTS"):
-            all_tests.extend(mod.TESTS)
+        if file.name not in loaded_files:
+            spec = importlib.util.spec_from_file_location(file.stem, file)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "TESTS"):
+                all_tests.extend(mod.TESTS)
+
     return all_tests
 
 # ===============================================================
@@ -588,6 +717,11 @@ def main():
         section, desc, is_new_section = get_section_info(name, previous_test_name)
         if is_new_section and section:
             print_section_header(section, desc)
+
+        # Vérifier si on doit afficher un nouveau header de sous-section
+        subsection, subsec_desc, is_new_subsection = get_subsection_info(name, previous_test_name)
+        if is_new_subsection and subsection and subsec_desc:
+            print_subsection_header(subsection, subsec_desc)
 
         safe = name.replace('/', '_')
         left = f" [{idx:>2}/{total}] {name} "
