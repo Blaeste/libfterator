@@ -12,7 +12,10 @@
 ```bash
 git clone https://github.com/Blaeste/libfterator.git
 cd libfterator
-./tester.py /chemin/vers/votre/libft  # remplacez par le chemin de votre libft
+```
+
+```bash
+./tester.py /chemin/vers/votre/libft
 # Exemple: ./tester.py ../libft
 ```
 
