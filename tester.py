@@ -95,7 +95,7 @@ def print_header():
     print(f"{CLR['red']}╔═════════════════════════════════════════════════════════════════════════════════╗{CLR['reset']}")
     print(f"{CLR['red']}║{CLR['reset']}{CLR['bold']}                                Libfterator 2025{CLR['reset']}{CLR['red']}                                 ║{CLR['reset']}")
     print(f"{CLR['red']}║{CLR['reset']}                          Testeur complet pour la libft                          {CLR['red']}║{CLR['reset']}")
-    print(f"{CLR['red']}║{CLR['reset']}{CLR['dim']}                            104 tests • 3 sections{CLR['reset']}{CLR['red']}                               ║{CLR['reset']}")
+    print(f"{CLR['red']}║{CLR['reset']}{CLR['dim']}                            259 tests • 4 sections{CLR['reset']}{CLR['red']}                               ║{CLR['reset']}")
     print(f"{CLR['red']}╚═════════════════════════════════════════════════════════════════════════════════╝{CLR['reset']}")
     print()
 
@@ -318,6 +318,8 @@ def get_section_info(test_name, previous_test_name=None):
 
     bonus_functions = ['list']
 
+    overprotection_functions = ['overprotection']
+
     def get_function_from_test(name):
         return name.split('/')[0]
 
@@ -333,6 +335,9 @@ def get_section_info(test_name, previous_test_name=None):
     elif current_func in bonus_functions:
         section = "BONUS"
         desc = "Listes chaînées"
+    elif current_func in overprotection_functions:
+        section = "VALIDATION"
+        desc = "Tests de sur-protection"
     else:
         return None, None, None
 
@@ -342,6 +347,8 @@ def get_section_info(test_name, previous_test_name=None):
         if prev_func in part1_functions and current_func in part2_functions:
             return section, desc, True
         elif prev_func in part2_functions and current_func in bonus_functions:
+            return section, desc, True
+        elif prev_func in bonus_functions and current_func in overprotection_functions:
             return section, desc, True
         elif prev_func not in part1_functions and current_func in part1_functions:
             return "PARTIE 1", "Fonctions de la libc", True
@@ -428,11 +435,23 @@ def load_tests(tests_dir: Path):
     return all_tests
 
 # ===============================================================
-# 🚴‍♂️ Exécution d’un binaire de test
+# 🚴‍♂️ Exécution d'un binaire de test
 # ===============================================================
-def run_exec(exe: Path):
+def run_exec(exe: Path, test_name=""):
     t0 = time.time()
-    res = subprocess.run([str(exe)])
+
+    # Pour les tests d'overprotection, on s'attend à un crash (SIGSEGV)
+    if "overprotection" in test_name and "should_crash" in test_name:
+        # Timeout plus court pour les tests de crash
+        try:
+            res = subprocess.run([str(exe)], timeout=2)
+        except subprocess.TimeoutExpired:
+            # Si le test timeout, c'est probablement parce qu'il attend un signal
+            ms = int((time.time() - t0) * 1000)
+            return 1, ms  # FAIL - le test n'a pas crashé comme attendu
+    else:
+        res = subprocess.run([str(exe)])
+
     ms = int((time.time() - t0) * 1000)
     return res.returncode, ms
 
@@ -576,8 +595,15 @@ def main():
         print(f"{CLR['dim']}{left}{dots}{CLR['reset']}", end="", flush=True)
 
         exe = compile_harness(root, safe, src, logger)
-        code, ms = run_exec(exe)
-        status = "PASS" if code == 0 else ("CRASH" if code not in (0, 1) else "FAIL")
+        code, ms = run_exec(exe, name)
+
+        # Logique spéciale pour les tests d'overprotection
+        if "overprotection" in name and "should_crash" in name:
+            # Pour ces tests, on s'attend à un code de retour 0 (PASS = a crashé comme attendu)
+            # Code 1 = FAIL (sur-protégé, n'a pas crashé)
+            status = "PASS" if code == 0 else "FAIL"
+        else:
+            status = "PASS" if code == 0 else ("CRASH" if code not in (0, 1) else "FAIL")
 
         # Log du résultat du test
         error_output = None
