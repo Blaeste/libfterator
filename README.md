@@ -14,21 +14,10 @@ git clone https://github.com/Blaeste/libfterator.git
 cd libfterator
 ```
 ./tester.py /chemin/vers/votre/libft
+
 **C'est tout ! Aucune dépendance requise.** Fonctionne avec Python 3.6+ (installé par défaut sur les machines 42).
 
 ---
-
-## 🧭 Sommaire
-
-- [✨ Points forts](#-points-forts)
-- [🎯 Couverture des tests (281)](#-couverture-des-tests-281)
-- [💡 Utilisation rapide](#-utilisation-rapide)
-- [🧰 Options](#-options)
-- [🌟 Fonctionnalités avancées](#-fonctionnalités-avancées)
-- [🖥️ Pré-requis](#️-pré-requis)
-- [🧪 Exemple de sortie (extrait)](#-exemple-de-sortie-extrait)
-- [🤝 Beta testeurs et support](#-beta-testeurs-et-support)
-- [📄 Licence](#-licence)
 
 ## ✨ Points forts
 
