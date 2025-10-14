@@ -12,8 +12,9 @@
 ```bash
 git clone https://github.com/Blaeste/libfterator.git
 cd libfterator
+./tester.py /chemin/vers/votre/libft  # remplacez par le chemin de votre libft
+# Exemple: ./tester.py ../libft
 ```
-./tester.py /chemin/vers/votre/libft
 
 **C'est tout ! Aucune dépendance requise.** Fonctionne avec Python 3.6+ (installé par défaut sur les machines 42).
 
