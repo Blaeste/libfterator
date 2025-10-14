@@ -374,10 +374,29 @@ def compile_harness(root: Path, name: str, source: str, logger=None) -> Path:
 
     src.write_text(source)
 
-    inc = "-I" + str(libft)
+    # Discover include directories: prefer standard locations and any folder containing libft.h
+    include_dirs = [str(libft)]  # Always include the libft root directory first
+
+    # Check for common include directory names
+    common_inc_names = ["inc", "include", "includes", "headers"]
+    for inc_name in common_inc_names:
+        p = libft / inc_name
+        if p.is_dir():
+            include_dirs.append(str(p))
+
+    # Also scan all subdirectories for libft.h and add their parent dir
+    try:
+        for header_file in libft.rglob("libft.h"):
+            parent = header_file.parent
+            parent_str = str(parent)
+            if parent_str not in include_dirs:
+                include_dirs.append(parent_str)
+    except Exception:
+        pass
+
+    inc_flags = [f"-I{p}" for p in include_dirs]
     lib = "-L" + str(libft)
-    cmd = [os.environ.get("CC", "cc"), "-Wall", "-Wextra", "-Werror",
-           inc, str(src), lib, "-lft", "-o", str(exe)]
+    cmd = [os.environ.get("CC", "cc"), "-Wall", "-Wextra", "-Werror"] + inc_flags + [str(src), lib, "-lft", "-o", str(exe)]
 
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=False)

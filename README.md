@@ -50,6 +50,11 @@ cd libfterator
 ./tester.py /chemin/vers/libft --run list
 ```
 
+### Recherche automatique des headers
+
+Le testeur détecte automatiquement les dossiers d'en-têtes courants (par ex. `inc/`, `include/`, `includes/`, `headers/`) ainsi que n'importe quel répertoire contenant `libft.h` sous le dossier fourni. Vous n'avez donc pas besoin de déplacer `libft.h` à la racine — placez-le simplement dans un dossier `inc/` et le testeur l'ajoutera à la ligne de compilation (`-I`).
+
+
 ### Options disponibles
 ```bash
 # Afficher tous les tests disponibles
