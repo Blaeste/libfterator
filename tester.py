@@ -27,11 +27,13 @@ def icon(status):
     if status == "PASS": return "✅"
     if status == "FAIL": return "❌"
     if status == "LEAK": return "🚰"  # Icône pour les fuites mémoire
+    if status == "TIMEOUT": return "⏰"  # Icône pour les timeouts
     return "💥"
 def color_status(s):
     if s == "PASS": return f"{CLR['green']}{s}{CLR['reset']}"
     if s == "FAIL": return f"{CLR['red']}{s}{CLR['reset']}"
     if s == "LEAK": return f"{CLR['red']}{s}{CLR['reset']}"  # Rouge pour les fuites
+    if s == "TIMEOUT": return f"{CLR['yellow']}{s}{CLR['reset']}"  # Jaune pour les timeouts
     return f"{CLR['yellow']}{s}{CLR['reset']}"
 def human_ms(ms): return f"{ms} ms"
 
@@ -73,10 +75,18 @@ def log_norminette_result(logger, result, output, error):
 
 def log_test_result(logger, test_name, status, duration, error_output=None):
     """Enregistre le résultat d'un test."""
-    status_icon = "✅" if status == "PASS" else "❌"
+    if status == "PASS":
+        status_icon = "✅"
+    elif status == "TIMEOUT":
+        status_icon = "⏰"
+    else:
+        status_icon = "❌"
+
     logger.info(f"{status_icon} {test_name}: {status} ({duration} ms)")
     if error_output:
         logger.error(f"Erreur de compilation pour {test_name}:\n{error_output}")
+    if status == "TIMEOUT":
+        logger.warning(f"⚠️ Test {test_name} interrompu après timeout - possible boucle infinie")
 
 def log_compilation_result(logger, success, output=None, error=None):
     """Enregistre les résultats de compilation."""
@@ -108,11 +118,13 @@ def print_header():
     print(f"  {CLR['cyan']}./tester.py /path/libft --run PATTERN{CLR['reset']}  - Exécuter les tests contenant PATTERN")
     print(f"  {CLR['cyan']}./tester.py /path/libft --verbose{CLR['reset']}      - Mode verbose (plus de détails)")
     print(f"  {CLR['cyan']}./tester.py /path/libft --no-color{CLR['reset']}     - Désactiver les couleurs")
+    print(f"  {CLR['cyan']}./tester.py /path/libft --timeout N{CLR['reset']}    - Timeout de N secondes (défaut: 10s)")
     print(f"")
     print(f"{CLR['dim']}Exemples :{CLR['reset']}")
     print(f"  {CLR['yellow']}./tester.py ./libft --run strlen{CLR['reset']}       - Tester seulement strlen")
     print(f"  {CLR['yellow']}./tester.py ./libft --run memcpy{CLR['reset']}       - Tester seulement memcpy")
     print(f"  {CLR['yellow']}./tester.py ./libft --run list{CLR['reset']}         - Tester les fonctions bonus")
+    print(f"  {CLR['yellow']}./tester.py ./libft --timeout 5{CLR['reset']}        - Timeout de 5 secondes par test")
     print()
 
     # Informations GitHub
@@ -129,6 +141,7 @@ VERBOSE = "--verbose" in sys.argv
 RUN_FILTER = None
 LIST_ONLY = False
 SAFE_MODE = False
+TIMEOUT = 2  # Timeout par défaut en secondes
 
 argv = []
 i = 1
@@ -143,12 +156,22 @@ while i < len(sys.argv):
         i += 1
     elif a == "--safe":
         SAFE_MODE = True
+    elif a == "--timeout" and i + 1 < len(sys.argv):
+        try:
+            TIMEOUT = int(sys.argv[i + 1])
+            if TIMEOUT <= 0:
+                print("Erreur: Le timeout doit être un nombre positif")
+                sys.exit(1)
+        except ValueError:
+            print("Erreur: Le timeout doit être un nombre entier")
+            sys.exit(1)
+        i += 1
     else:
         argv.append(a)
     i += 1
 
 if len(argv) < 1:
-    print("Usage: ./tester.py /chemin/vers/libft [--verbose] [--list] [--run PATTERN] [--no-color] [--safe]")
+    print("Usage: ./tester.py /chemin/vers/libft [--verbose] [--list] [--run PATTERN] [--no-color] [--safe] [--timeout SECONDS]")
     sys.exit(1)
 
 libft = Path(argv[0]).resolve()
@@ -207,7 +230,7 @@ def check_makefile_rules():
                     ["make", "-C", str(libft), rule_to_test],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    timeout=30
+                    timeout=TIMEOUT * 3  # Plus de temps pour la compilation
                 )
                 if result.returncode == 0 and (libft / "libft.a").exists():
                     statuses.append("ok")
@@ -221,7 +244,7 @@ def check_makefile_rules():
                     ["make", "-C", str(libft), "clean"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    timeout=10
+                    timeout=TIMEOUT
                 )
                 statuses.append("ok" if result.returncode == 0 else "error")
             elif rule_to_test == "fclean":
@@ -229,7 +252,7 @@ def check_makefile_rules():
                     ["make", "-C", str(libft), "fclean"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    timeout=10
+                    timeout=TIMEOUT
                 )
                 statuses.append("ok" if result.returncode == 0 else "error")
             elif rule_to_test == "re":
@@ -237,7 +260,7 @@ def check_makefile_rules():
                     ["make", "-C", str(libft), "re"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    timeout=30
+                    timeout=TIMEOUT * 3  # Plus de temps pour la recompilation
                 )
                 if result.returncode == 0 and (libft / "libft.a").exists():
                     statuses.append("ok")
@@ -248,7 +271,7 @@ def check_makefile_rules():
                     ["make", "-C", str(libft), "bonus"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    timeout=30
+                    timeout=TIMEOUT * 3  # Plus de temps pour la compilation bonus
                 )
                 if result.returncode == 0:
                     statuses.append("ok")
@@ -584,6 +607,11 @@ def load_tests(tests_dir: Path):
 def run_exec(exe: Path, test_name=""):
     t0 = time.time()
 
+    # Utiliser le timeout configuré globalement, avec des valeurs spéciales pour certains tests
+    default_timeout = TIMEOUT
+    valgrind_timeout = TIMEOUT * 3  # Plus long timeout pour valgrind
+    crash_timeout = min(2, TIMEOUT)  # Timeout court pour les tests de crash (max 2s)
+
     # Pour les tests valgrind, lancer avec valgrind pour détecter les fuites mémoire
     if "valgrind" in test_name:
         # Vérifier si valgrind est disponible
@@ -605,30 +633,44 @@ def run_exec(exe: Path, test_name=""):
                 "--quiet",  # Réduire le bruit
                 str(exe)
             ]
-            res = subprocess.run(valgrind_cmd)
-            ms = int((time.time() - t0) * 1000)
-            # Code 42 = fuite détectée, Code 0 = pas de fuite
-            return res.returncode, ms
+            try:
+                res = subprocess.run(valgrind_cmd, timeout=valgrind_timeout)
+                ms = int((time.time() - t0) * 1000)
+                # Code 42 = fuite détectée, Code 0 = pas de fuite
+                return res.returncode, ms
+            except subprocess.TimeoutExpired:
+                ms = int((time.time() - t0) * 1000)
+                return -999, ms  # Code spécial pour timeout
         else:
-            # Valgrind non disponible, exécuter normalement
-            res = subprocess.run([str(exe)])
-            ms = int((time.time() - t0) * 1000)
-            return res.returncode, ms
+            # Valgrind non disponible, exécuter normalement avec timeout
+            try:
+                res = subprocess.run([str(exe)], timeout=default_timeout)
+                ms = int((time.time() - t0) * 1000)
+                return res.returncode, ms
+            except subprocess.TimeoutExpired:
+                ms = int((time.time() - t0) * 1000)
+                return -999, ms  # Code spécial pour timeout
 
     # Pour les tests d'overprotection, on s'attend à un crash (SIGSEGV)
     elif "overprotection" in test_name and "should_crash" in test_name:
         # Timeout plus court pour les tests de crash
         try:
-            res = subprocess.run([str(exe)], timeout=2)
+            res = subprocess.run([str(exe)], timeout=crash_timeout)
+            ms = int((time.time() - t0) * 1000)
+            return res.returncode, ms
         except subprocess.TimeoutExpired:
             # Si le test timeout, c'est probablement parce qu'il attend un signal
             ms = int((time.time() - t0) * 1000)
             return 1, ms  # FAIL - le test n'a pas crashé comme attendu
     else:
-        res = subprocess.run([str(exe)])
-
-    ms = int((time.time() - t0) * 1000)
-    return res.returncode, ms
+        # Tests normaux avec timeout de protection
+        try:
+            res = subprocess.run([str(exe)], timeout=default_timeout)
+            ms = int((time.time() - t0) * 1000)
+            return res.returncode, ms
+        except subprocess.TimeoutExpired:
+            ms = int((time.time() - t0) * 1000)
+            return -999, ms  # Code spécial pour timeout
 
 # ===============================================================
 # 🧹 Norminette — détection + exécution
@@ -792,7 +834,7 @@ def main():
     total = len(tests)
     rows = []
     print()
-    print(f"{CLR['bold']}Running {total} test(s){CLR['reset']}")
+    print(f"{CLR['bold']}Running {total} test(s){CLR['reset']} {CLR['dim']}(timeout: {TIMEOUT}s){CLR['reset']}")
 
     previous_test_name = None
     for idx, (name, src) in enumerate(tests, 1):
@@ -814,8 +856,11 @@ def main():
         exe = compile_harness(root, safe, src, logger)
         code, ms = run_exec(exe, name)
 
+        # Vérifier d'abord si c'est un timeout
+        if code == -999:
+            status = "TIMEOUT"
         # Logique spéciale pour les tests valgrind
-        if "valgrind" in name:
+        elif "valgrind" in name:
             # Code 0 = pas de fuite (PASS), Code 42 = fuite détectée (FAIL), autres = erreur d'exécution
             if code == 0:
                 status = "PASS"
@@ -837,7 +882,7 @@ def main():
             # Capturer l'erreur si le test a échoué
             if exe.exists():
                 try:
-                    error_result = subprocess.run([str(exe)], capture_output=True, text=True, timeout=5)
+                    error_result = subprocess.run([str(exe)], capture_output=True, text=True, timeout=TIMEOUT)
                     if error_result.stdout or error_result.stderr:
                         error_output = f"stdout: {error_result.stdout}\nstderr: {error_result.stderr}"
                 except:
