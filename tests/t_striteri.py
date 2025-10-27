@@ -164,4 +164,18 @@ int main() {
 
     return 0;
 }'''),
+
+    ("striteri/null_function", '''
+#include <string.h>
+int main() {
+    char s[] = "hello";
+
+    // ft_striteri avec une fonction NULL ne doit pas planter
+    ft_striteri(s, NULL);
+
+    // La chaîne ne doit pas être modifiée
+    if (strcmp(s, "hello") != 0) return 1;
+
+    return 0;
+}'''),
 ]

@@ -203,4 +203,16 @@ int main() {
     free(result);
     return 0;
 }'''),
+
+    ("strmapi/null_function", '''
+#include <stdlib.h>
+int main() {
+    char *s = "hello";
+    char *result = ft_strmapi(s, NULL);
+
+    // ft_strmapi avec une fonction NULL doit retourner NULL
+    if (result != NULL) return 1;
+
+    return 0;
+}'''),
 ]

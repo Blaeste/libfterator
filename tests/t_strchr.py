@@ -133,4 +133,22 @@ int main() {
 
     return 0;
 }'''),
+
+    ("strchr/unsigned_char_comparison", '''
+#include <string.h>
+int main() {
+    char str[] = "Hello\\310World"; // \\310 = 200 en octal
+    char *result1, *result2;
+
+    // Test avec un caractère ayant une valeur > 127 (unsigned char)
+    result1 = strchr(str, 200);
+    result2 = ft_strchr(str, 200);
+
+    if (result1 != result2) return 1;
+
+    // Le caractère doit être trouvé à la position après "Hello"
+    if (result2 != &str[5]) return 1;
+
+    return 0;
+}'''),
 ]
