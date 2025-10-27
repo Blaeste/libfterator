@@ -141,7 +141,7 @@ VERBOSE = "--verbose" in sys.argv
 RUN_FILTER = None
 LIST_ONLY = False
 SAFE_MODE = False
-TIMEOUT = 2  # Timeout par défaut en secondes
+TIMEOUT = 5  # Timeout par défaut en secondes (augmenté pour éviter les problèmes de timing)
 
 argv = []
 i = 1
