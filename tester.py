@@ -107,7 +107,7 @@ def print_header():
     print(f"{CLR['red']}╔═════════════════════════════════════════════════════════════════════════════════╗{CLR['reset']}")
     print(f"{CLR['red']}║{CLR['reset']}{CLR['bold']}                                Libfterator 2025{CLR['reset']}{CLR['red']}                                 ║{CLR['reset']}")
     print(f"{CLR['red']}║{CLR['reset']}                          Testeur complet pour la libft                          {CLR['red']}║{CLR['reset']}")
-    print(f"{CLR['red']}║{CLR['reset']}{CLR['dim']}                            259 tests • 4 sections{CLR['reset']}{CLR['red']}                               ║{CLR['reset']}")
+    print(f"{CLR['red']}║{CLR['reset']}{CLR['dim']}                            329 tests • 4 sections{CLR['reset']}{CLR['red']}                               ║{CLR['reset']}")
     print(f"{CLR['red']}╚═════════════════════════════════════════════════════════════════════════════════╝{CLR['reset']}")
     print()
 

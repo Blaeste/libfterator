@@ -154,4 +154,58 @@ int main() {
 
     return 0;
 }'''),
+
+    ("memcmp/null_bytes_beyond_string", '''
+#include <string.h>
+int main() {
+    char s1[20] = "teste";
+    char s2[20] = "test";
+
+    // Teste au-delà du null byte
+    int result1 = memcmp(s1, s2, 10);
+    int result2 = ft_memcmp(s1, s2, 10);
+
+    // s1[4] = 'e', s2[4] = '\\0' donc s1 > s2
+    if ((result1 > 0) != (result2 > 0)) return 1;
+
+    return 0;
+}'''),
+
+    ("memcmp/signed_char_edge", '''
+#include <string.h>
+int main() {
+    char s1[10] = "abcdef";
+    char s2[10] = "abc\\xfdxx";
+
+    int result1 = memcmp(s1, s2, 5);
+    int result2 = ft_memcmp(s1, s2, 5);
+
+    // 'd' (0x64) vs 0xfd : doit traiter comme unsigned
+    if ((result1 < 0) != (result2 < 0)) return 1;
+
+    return 0;
+}'''),
+
+    ("memcmp/continues_after_null", '''
+#include <string.h>
+int main() {
+    char s1[20] = "abc";
+    char s2[20] = "abc";
+
+    // Mettre null au même endroit
+    s1[3] = 0;
+    s2[3] = 0;
+
+    // Mais différences après
+    s1[4] = 'x';
+    s2[4] = 'y';
+
+    int result1 = memcmp(s1, s2, 7);
+    int result2 = ft_memcmp(s1, s2, 7);
+
+    // memcmp continue après le null byte
+    if ((result1 < 0) != (result2 < 0)) return 1; // 'x' < 'y'
+
+    return 0;
+}'''),
 ]

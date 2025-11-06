@@ -131,4 +131,35 @@ int main() {
 
     return 0;
 }'''),
+
+    ("memmove/exact_overlap", '''
+#include <string.h>
+int main() {
+    char buffer1[] = "Hello World";
+    char buffer2[] = "Hello World";
+
+    // Overlap exact (même pointeur)
+    memmove(buffer1, buffer1, strlen(buffer1));
+    ft_memmove(buffer2, buffer2, strlen(buffer2));
+
+    if (strcmp(buffer1, buffer2) != 0) return 1;
+    if (strcmp(buffer2, "Hello World") != 0) return 1;
+
+    return 0;
+}'''),
+
+    ("memmove/single_byte_overlap", '''
+#include <string.h>
+int main() {
+    char buffer1[] = "abcdefgh";
+    char buffer2[] = "abcdefgh";
+
+    // Overlap d'un seul byte
+    memmove(buffer1 + 1, buffer1, 1);
+    ft_memmove(buffer2 + 1, buffer2, 1);
+
+    if (strcmp(buffer1, buffer2) != 0) return 1;
+
+    return 0;
+}'''),
 ]

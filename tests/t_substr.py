@@ -162,4 +162,124 @@ int main() {
     free(sub);
     return 0;
 }'''),
+
+    ("substr/empty_string_zero_len", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char *s = "";
+    char *sub = ft_substr(s, 0, 0);
+
+    if (sub == NULL) return 1;
+    if (strcmp(sub, "") != 0) {
+        free(sub);
+        return 1;
+    }
+
+    free(sub);
+    return 0;
+}'''),
+
+    ("substr/empty_string_with_len", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char *s = "";
+    char *sub = ft_substr(s, 0, 1);
+
+    if (sub == NULL) return 1;
+    if (strcmp(sub, "") != 0) {
+        free(sub);
+        return 1;
+    }
+
+    free(sub);
+    return 0;
+}'''),
+
+    ("substr/start_beyond_empty", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char *s = "";
+    char *sub = ft_substr(s, 1, 1);
+
+    if (sub == NULL) return 1;
+    if (strcmp(sub, "") != 0) {
+        free(sub);
+        return 1;
+    }
+
+    free(sub);
+    return 0;
+}'''),
+
+    ("substr/max_len", '''
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+int main() {
+    char *s = "hola";
+    char *sub = ft_substr(s, 0, SIZE_MAX);
+
+    if (sub == NULL) return 1;
+    if (strcmp(sub, "hola") != 0) {
+        free(sub);
+        return 1;
+    }
+
+    free(sub);
+    return 0;
+}'''),
+
+    ("substr/large_start_max_len", '''
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <limits.h>
+int main() {
+    char *s = "hola";
+    char *sub = ft_substr(s, UINT_MAX, SIZE_MAX);
+
+    if (sub == NULL) return 1;
+    if (strcmp(sub, "") != 0) {
+        free(sub);
+        return 1;
+    }
+
+    free(sub);
+    return 0;
+}'''),
+
+    ("substr/exact_boundaries", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char *s = "hola";
+    char *sub;
+
+    // Test exactement à la limite
+    sub = ft_substr(s, 4, 0);
+    if (sub == NULL || strcmp(sub, "") != 0) {
+        if (sub) free(sub);
+        return 1;
+    }
+    free(sub);
+
+    sub = ft_substr(s, 4, 1);
+    if (sub == NULL || strcmp(sub, "") != 0) {
+        if (sub) free(sub);
+        return 1;
+    }
+    free(sub);
+
+    sub = ft_substr(s, 3, 1);
+    if (sub == NULL || strcmp(sub, "a") != 0) {
+        if (sub) free(sub);
+        return 1;
+    }
+    free(sub);
+
+    return 0;
+}'''),
 ]

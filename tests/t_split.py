@@ -176,4 +176,118 @@ int main() {
     free(result);
     return 0;
 }'''),
+
+    ("split/single_char", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char *s = "a";
+    char **result = ft_split(s, ' ');
+
+    if (result == NULL) return 1;
+    if (strcmp(result[0], "a") != 0) return 1;
+    if (result[1] != NULL) return 1;
+
+    for (int i = 0; result[i]; i++) free(result[i]);
+    free(result);
+    return 0;
+}'''),
+
+    ("split/delimiter_not_found", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char *s = "HelloWorld";
+    char **result = ft_split(s, ' ');
+
+    if (result == NULL) return 1;
+    if (strcmp(result[0], "HelloWorld") != 0) return 1;
+    if (result[1] != NULL) return 1;
+
+    for (int i = 0; result[i]; i++) free(result[i]);
+    free(result);
+    return 0;
+}'''),
+
+    ("split/mixed_delimiters", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char *s = "a,b,c,d,e";
+    char **result = ft_split(s, ',');
+
+    if (result == NULL) return 1;
+    if (strcmp(result[0], "a") != 0) return 1;
+    if (strcmp(result[1], "b") != 0) return 1;
+    if (strcmp(result[2], "c") != 0) return 1;
+    if (strcmp(result[3], "d") != 0) return 1;
+    if (strcmp(result[4], "e") != 0) return 1;
+    if (result[5] != NULL) return 1;
+
+    for (int i = 0; result[i]; i++) free(result[i]);
+    free(result);
+    return 0;
+}'''),
+
+    ("split/consecutive_delimiters_start", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char *s = "   hello world";
+    char **result = ft_split(s, ' ');
+
+    if (result == NULL) return 1;
+    if (strcmp(result[0], "hello") != 0) return 1;
+    if (strcmp(result[1], "world") != 0) return 1;
+    if (result[2] != NULL) return 1;
+
+    for (int i = 0; result[i]; i++) free(result[i]);
+    free(result);
+    return 0;
+}'''),
+
+    ("split/consecutive_delimiters_end", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char *s = "hello world   ";
+    char **result = ft_split(s, ' ');
+
+    if (result == NULL) return 1;
+    if (strcmp(result[0], "hello") != 0) return 1;
+    if (strcmp(result[1], "world") != 0) return 1;
+    if (result[2] != NULL) return 1;
+
+    for (int i = 0; result[i]; i++) free(result[i]);
+    free(result);
+    return 0;
+}'''),
+
+    ("split/null_input", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char **result = ft_split(NULL, ' ');
+
+    if (result != NULL) return 1; // Doit retourner NULL pour entrée NULL
+
+    return 0;
+}'''),
+
+    ("split/special_chars", '''
+#include <stdlib.h>
+#include <string.h>
+int main() {
+    char *s = "hello\\nworld\\ttest";
+    char **result = ft_split(s, '\\n');
+
+    if (result == NULL) return 1;
+    if (strcmp(result[0], "hello") != 0) return 1;
+    if (strcmp(result[1], "world\\ttest") != 0) return 1;
+    if (result[2] != NULL) return 1;
+
+    for (int i = 0; result[i]; i++) free(result[i]);
+    free(result);
+    return 0;
+}'''),
 ]

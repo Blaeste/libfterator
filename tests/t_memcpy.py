@@ -121,4 +121,30 @@ int main() {
 
     return 0;
 }'''),
+
+    ("memcpy/alignment_test", '''
+#include <string.h>
+int main() {
+    // Test avec alignements différents
+    char src[100];
+    char dest1[100];
+    char dest2[100];
+
+    // Initialiser les buffers de destination avec la même valeur
+    memset(dest1, 0x42, 100);
+    memset(dest2, 0x42, 100);
+
+    for (int i = 0; i < 100; i++) {
+        src[i] = i % 128;
+    }
+
+    // Test avec offsets pour tester l'alignement
+    memcpy(dest1 + 1, src + 3, 50);
+    ft_memcpy(dest2 + 1, src + 3, 50);
+
+    // Comparer seulement la partie copiée + 1 byte avant et après
+    if (memcmp(dest1, dest2, 52) != 0) return 1;
+
+    return 0;
+}'''),
 ]

@@ -153,4 +153,136 @@ int main() {
 
     return 0;
 }'''),
+
+    ("strnstr/empty_needle_empty_haystack", '''
+int main() {
+    char haystack[] = "";
+    char needle[] = "";
+    char *result;
+
+    result = ft_strnstr(haystack, needle, 0);
+    if (result != haystack) return 1;
+
+    result = ft_strnstr(haystack, needle, 1);
+    if (result != haystack) return 1;
+
+    result = ft_strnstr(haystack, needle, 2);
+    if (result != haystack) return 1;
+
+    return 0;
+}'''),
+
+    ("strnstr/empty_haystack_with_needle", '''
+int main() {
+    char haystack[] = "";
+    char needle[] = "teste";
+    char *result;
+
+    result = ft_strnstr(haystack, needle, 0);
+    if (result != NULL) return 1;
+
+    result = ft_strnstr(haystack, needle, 1);
+    if (result != NULL) return 1;
+
+    result = ft_strnstr(haystack, needle, 2);
+    if (result != NULL) return 1;
+
+    return 0;
+}'''),
+
+    ("strnstr/haystack_empty_needle", '''
+int main() {
+    char haystack[] = "teste";
+    char needle[] = "";
+    char *result;
+
+    result = ft_strnstr(haystack, needle, 0);
+    if (result != haystack) return 1;
+
+    result = ft_strnstr(haystack, needle, 1);
+    if (result != haystack) return 1;
+
+    result = ft_strnstr(haystack, needle, 2);
+    if (result != haystack) return 1;
+
+    return 0;
+}'''),
+
+    ("strnstr/partial_match_boundary", '''
+int main() {
+    char haystack[] = "abcdefgh";
+    char needle[] = "abc";
+    char *result;
+
+    // Limite exacte pour ne pas contenir le needle complet
+    result = ft_strnstr(haystack, needle, 2);
+    if (result != NULL) return 1;
+
+    // Limite exacte pour contenir le needle
+    result = ft_strnstr(haystack, needle, 3);
+    if (result != haystack) return 1;
+
+    // Plus long que nécessaire
+    result = ft_strnstr(haystack, needle, 4);
+    if (result != haystack) return 1;
+
+    return 0;
+}'''),
+
+    ("strnstr/needle_longer_than_haystack", '''
+int main() {
+    char haystack[] = "abc";
+    char needle[] = "abcdef";
+    char *result;
+
+    result = ft_strnstr(haystack, needle, 2);
+    if (result != NULL) return 1;
+
+    result = ft_strnstr(haystack, needle, 3);
+    if (result != NULL) return 1;
+
+    result = ft_strnstr(haystack, needle, 4);
+    if (result != NULL) return 1;
+
+    result = ft_strnstr(haystack, needle, 5);
+    if (result != NULL) return 1;
+
+    return 0;
+}'''),
+
+    ("strnstr/overlapping_pattern", '''
+int main() {
+    char haystack[] = "aaxx";
+    char needle[] = "xx";
+    char *result;
+
+    result = ft_strnstr(haystack, needle, 2);
+    if (result != NULL) return 1;
+
+    result = ft_strnstr(haystack, needle, 3);
+    if (result != NULL) return 1;
+
+    result = ft_strnstr(haystack, needle, 4);
+    if (result != &haystack[2]) return 1;
+
+    result = ft_strnstr(haystack, needle, 5);
+    if (result != &haystack[2]) return 1;
+
+    result = ft_strnstr(haystack, needle, 6);
+    if (result != &haystack[2]) return 1;
+
+    return 0;
+}'''),
+
+    ("strnstr/signed_chars", '''
+int main() {
+    unsigned char s1[10] = "abcdef";
+    unsigned char s2[10] = "abc\\xfdxx";
+    char *result;
+
+    result = ft_strnstr((char*)s1, (char*)s2, 0xffffffff);
+    if (result != NULL) return 1;
+
+    return 0;
+}'''),
 ]

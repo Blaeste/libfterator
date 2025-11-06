@@ -154,4 +154,136 @@ int main() {
 
     return 0;
 }'''),
+
+    ("atoi/double_signs", '''
+#include <stdlib.h>
+int main() {
+    char *str = "--123";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
+
+    ("atoi/minus_plus", '''
+#include <stdlib.h>
+int main() {
+    char *str = "-+123";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
+
+    ("atoi/plus_plus", '''
+#include <stdlib.h>
+int main() {
+    char *str = "++123";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
+
+    ("atoi/space_between_sign", '''
+#include <stdlib.h>
+int main() {
+    char *str = "- 123";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
+
+    ("atoi/plus_space", '''
+#include <stdlib.h>
+int main() {
+    char *str = "+ 123";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
+
+    ("atoi/plus_newline", '''
+#include <stdlib.h>
+int main() {
+    char *str = "+\\n123";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
+
+    ("atoi/all_whitespace", '''
+#include <stdlib.h>
+int main() {
+    char *str = " \\t\\v\\n\\r\\f123";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
+
+    ("atoi/leading_zeros", '''
+#include <stdlib.h>
+int main() {
+    char *str = "+0000000000000000000000000000000000000000000000000000123";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
+
+    ("atoi/slash_separator", '''
+#include <stdlib.h>
+int main() {
+    char *str = "12/3";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
+
+    ("atoi/semicolon_separator", '''
+#include <stdlib.h>
+int main() {
+    char *str = "12;3";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
+
+    ("atoi/overflow_long", '''
+#include <stdlib.h>
+int main() {
+    char *str = "999999999999999999999999999999999999999999999";
+    int result1 = atoi(str);
+    int result2 = ft_atoi(str);
+
+    if (result1 != result2) return 1;
+
+    return 0;
+}'''),
 ]
