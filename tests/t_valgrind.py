@@ -197,8 +197,10 @@ int main() {
     free(result);
     return 0;
 }'''),
+]
 
-    # Tests pour les listes (bonus)
+# Tests bonus (fonctions de listes chaînées)
+BONUS_TESTS = [
     ("valgrind/lstnew_basic", '''
 #include <stdlib.h>
 int main() {
@@ -276,10 +278,18 @@ int main() {
     // Mapper la liste
     t_list *mapped = ft_lstmap(lst, map_func, del_content);
 
-    // Nettoyer les deux listes
+    # Nettoyer les deux listes
     ft_lstclear(&lst, del_content);
     if (mapped) ft_lstclear(&mapped, del_content);
 
     return 0;
 }'''),
 ]
+
+# Fonction pour obtenir les tests en fonction de la disponibilité des bonus
+def get_tests(has_bonus=True):
+    """Retourne les tests appropriés selon la disponibilité des fonctions bonus."""
+    if has_bonus:
+        return TESTS + BONUS_TESTS
+    else:
+        return TESTS

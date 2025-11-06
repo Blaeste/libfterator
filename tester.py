@@ -102,12 +102,13 @@ def log_compilation_result(logger, success, output=None, error=None):
 # ===============================================================
 # 🎨 En-tête du programme
 # ===============================================================
-def print_header():
+def print_header(num_tests=329):
     """Affiche l'en-tête stylisé du programme."""
+    test_info = f"{num_tests} tests • 4 sections"
     print(f"{CLR['red']}╔═════════════════════════════════════════════════════════════════════════════════╗{CLR['reset']}")
     print(f"{CLR['red']}║{CLR['reset']}{CLR['bold']}                                Libfterator 2025{CLR['reset']}{CLR['red']}                                 ║{CLR['reset']}")
     print(f"{CLR['red']}║{CLR['reset']}                          Testeur complet pour la libft                          {CLR['red']}║{CLR['reset']}")
-    print(f"{CLR['red']}║{CLR['reset']}{CLR['dim']}                            329 tests • 4 sections{CLR['reset']}{CLR['red']}                               ║{CLR['reset']}")
+    print(f"{CLR['red']}║{CLR['reset']}{CLR['dim']}                            {test_info:^37}{CLR['reset']}{CLR['red']}                               ║{CLR['reset']}")
     print(f"{CLR['red']}╚═════════════════════════════════════════════════════════════════════════════════╝{CLR['reset']}")
     print()
 
@@ -333,6 +334,21 @@ def build_libft():
 
     print(f" {CLR['green']}OK{CLR['reset']}")
 
+def check_bonus_rule():
+    """Vérifie si la règle 'bonus' existe dans le Makefile de la libft."""
+    try:
+        makefile_path = libft / "Makefile"
+        if not makefile_path.exists():
+            return False
+
+        with open(makefile_path, 'r') as f:
+            content = f.read()
+
+        # Rechercher la règle bonus (bonus: ou .PHONY: bonus)
+        return "bonus:" in content or ".PHONY: bonus" in content or "bonus " in content
+    except Exception:
+        return False
+
 # ===============================================================
 # 🎯 Détection des sections du sujet
 # ===============================================================
@@ -534,7 +550,14 @@ def compile_harness(root: Path, name: str, source: str, logger=None) -> Path:
 # ===============================================================
 # 🧩 Chargement des fichiers de tests
 # ===============================================================
-def load_tests(tests_dir: Path):
+def load_tests(tests_dir: Path, has_bonus=None):
+    # Détecter automatiquement si on a les bonus (si pas spécifié)
+    if has_bonus is None:
+        has_bonus = check_bonus_rule()
+
+    if not has_bonus:
+        print(f"{CLR['yellow']}ℹ️  Règle 'bonus' non trouvée dans le Makefile - tests bonus ignorés{CLR['reset']}")
+
     # Ordre logique selon le sujet de la libft
     test_order = [
         # PARTIE 1 - Fonctions de la libc
@@ -567,15 +590,18 @@ def load_tests(tests_dir: Path):
         't_striteri.py',     # ft_striteri
         't_putfd.py',        # ft_putchar_fd, ft_putstr_fd, ft_putendl_fd, ft_putnbr_fd
 
-        # BONUS - Listes chaînées
-        't_list.py',         # ft_lstnew, ft_lstadd_front, ft_lstsize, etc.
-
         # VALGRIND - Tests de fuites mémoire
         't_valgrind.py',     # Tests avec valgrind pour détecter les memory leaks
 
         # VALIDATION - Tests de sur-protection (à la fin)
         't_overprotection.py'
     ]
+
+    # Ajouter les tests bonus seulement si la règle bonus existe
+    if has_bonus:
+        # Insérer les tests bonus avant valgrind
+        bonus_index = test_order.index('t_valgrind.py')
+        test_order.insert(bonus_index, 't_list.py')  # ft_lstnew, ft_lstadd_front, ft_lstsize, etc.
 
     all_tests = []
 
@@ -586,17 +612,29 @@ def load_tests(tests_dir: Path):
             spec = importlib.util.spec_from_file_location(file_path.stem, file_path)
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
-            if hasattr(mod, "TESTS"):
+
+            # Traitement spécial pour t_valgrind.py qui a une fonction conditionnelle
+            if filename == 't_valgrind.py' and hasattr(mod, "get_tests"):
+                all_tests.extend(mod.get_tests(has_bonus))
+            elif hasattr(mod, "TESTS"):
                 all_tests.extend(mod.TESTS)
 
     # Charger les fichiers manquants (au cas où)
     loaded_files = set(test_order)
     for file in sorted(tests_dir.glob("t_*.py")):
         if file.name not in loaded_files:
+            # Exclure t_list.py si pas de bonus
+            if file.name == 't_list.py' and not has_bonus:
+                continue
+
             spec = importlib.util.spec_from_file_location(file.stem, file)
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
-            if hasattr(mod, "TESTS"):
+
+            # Traitement spécial pour t_valgrind.py
+            if file.name == 't_valgrind.py' and hasattr(mod, "get_tests"):
+                all_tests.extend(mod.get_tests(has_bonus))
+            elif hasattr(mod, "TESTS"):
                 all_tests.extend(mod.TESTS)
 
     return all_tests
@@ -778,14 +816,33 @@ def run_norminette(log_path: Path, logger=None):
 # 🚀 Main
 # ===============================================================
 def main():
-    print_header()
-
     root = Path(__file__).resolve().parent
     tests_dir = root / "tests"
     ensure_path(libft / "Makefile", "Makefile libft")
 
     (root / "build").mkdir(exist_ok=True)
     (root / "out").mkdir(exist_ok=True)
+
+    # Charger les tests d'abord pour connaître le nombre exact
+    tests = load_tests(tests_dir)
+    if not tests:
+        print("Aucun test trouvé dans tests/")
+        return
+
+    # Filtre optionnel
+    if RUN_FILTER:
+        tests = [t for t in tests if RUN_FILTER in t[0]]
+        if not tests:
+            print(f"Aucun test ne correspond au filtre: {RUN_FILTER}")
+            return
+
+    if LIST_ONLY:
+        for name, _ in tests:
+            print(name)
+        return
+
+    # Afficher l'en-tête avec le bon nombre de tests
+    print_header(len(tests))
 
     # Configuration du logging dans le dossier out/
     log_file, logger = setup_logging(root / "out")
@@ -806,24 +863,6 @@ def main():
     print(f" {icon(norm['status'])} {color_status(norm['status'])} " +
           f"{CLR['gray']}({human_ms(norm['ms'])}){CLR['reset']}")
     print()
-
-
-    tests = load_tests(tests_dir)
-    if not tests:
-        print("Aucun test trouvé dans tests/")
-        return
-
-    # Filtre optionnel
-    if RUN_FILTER:
-        tests = [t for t in tests if RUN_FILTER in t[0]]
-        if not tests:
-            print(f"Aucun test ne correspond au filtre: {RUN_FILTER}")
-            return
-
-    if LIST_ONLY:
-        for name, _ in tests:
-            print(name)
-        return
 
     check_makefile_rules()
     build_libft()
