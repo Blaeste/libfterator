@@ -278,7 +278,7 @@ int main() {
     // Mapper la liste
     t_list *mapped = ft_lstmap(lst, map_func, del_content);
 
-    # Nettoyer les deux listes
+    // Nettoyer les deux listes
     ft_lstclear(&lst, del_content);
     if (mapped) ft_lstclear(&mapped, del_content);
 
